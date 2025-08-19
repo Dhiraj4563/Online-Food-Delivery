@@ -72,8 +72,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     div.textContent = item.name;
                     div.addEventListener('click', () => {
                         showItemDetails(item);
-                        searchResults.innerHTML = ''; // close list
-                        searchBox.value = ''; // clear search bar
+                        searchResults.innerHTML = '';
+                        searchBox.value = '';
                     });
                     searchResults.appendChild(div);
                 });
@@ -91,15 +91,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Show item details
+    // Show item details with quantity control
     function showItemDetails(item) {
         selectedItem = item;
+        let selectedCount = 1; // default quantity
+
         itemDetails.innerHTML = `
             <h2>${item.name}</h2>
             <img src="${item.image}" alt="${item.name}" class="item-image">
             <p>Price: ₹${item.price}</p>
-            <p>Quantity: ${item.quantity}</p>
+            <p>Base Quantity: ${item.quantity}</p>
+            
+            <div class="quantity-control">
+                <button id="decrease">-</button>
+                <span id="count">${selectedCount}</span>
+                <button id="increase">+</button>
+            </div>
+
+            <p id="total-price">Total: ₹${item.price * selectedCount}</p>
+
             <button id="fav-btn">${favorites.includes(item.id) ? '❤️ Remove Favorite' : '🤍 Add to Favorites'}</button>
+            
             <div id="order-details">
                 <label for="address">Address:</label>
                 <input type="text" id="address" placeholder="Enter your address">
@@ -110,6 +122,21 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         itemDetails.classList.remove('hidden');
 
+        // Quantity increase/decrease
+        document.getElementById("increase").addEventListener("click", () => {
+            selectedCount++;
+            document.getElementById("count").textContent = selectedCount;
+            document.getElementById("total-price").textContent = `Total: ₹${item.price * selectedCount}`;
+        });
+
+        document.getElementById("decrease").addEventListener("click", () => {
+            if (selectedCount > 1) {
+                selectedCount--;
+                document.getElementById("count").textContent = selectedCount;
+                document.getElementById("total-price").textContent = `Total: ₹${item.price * selectedCount}`;
+            }
+        });
+
         // Add favorite toggle
         document.getElementById('fav-btn').addEventListener('click', () => {
             if (favorites.includes(item.id)) {
@@ -119,15 +146,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 favorites.push(item.id);
                 alert(`${item.name} added to favorites`);
             }
-            showItemDetails(item); // refresh button
+            showItemDetails(item); // refresh
         });
-    }
 
-    // Handle order confirmation
-    document.addEventListener('click', (event) => {
-        if (event.target && event.target.id === 'confirm-order') {
-            const address = document.getElementById('address').value.trim();
-            const contact = document.getElementById('contact').value.trim();
+        // Handle order confirmation
+        document.getElementById("confirm-order").addEventListener("click", () => {
+            const address = document.getElementById("address").value.trim();
+            const contact = document.getElementById("contact").value.trim();
 
             if (!address || !contact) {
                 alert('⚠️ Please fill in all the details.');
@@ -139,17 +164,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // ✅ Replace with shop owner's WhatsApp number
             const shopOwnerNumber = "+9779818970299";  
 
-            const whatsappMessage = `🛒 Order Details:\n\n🍴 Item: ${selectedItem.name}\n💰 Price: ₹${selectedItem.price}\n📦 Quantity: ${selectedItem.quantity}\n🏠 Address: ${address}\n📞 Contact: ${contact}`;
+            const whatsappMessage = `🛒 Order Details:\n\n🍴 Item: ${item.name}\n💰 Price: ₹${item.price}\n📦 Base Quantity: ${item.quantity}\n🔢 Ordered: ${selectedCount}\n💵 Total: ₹${item.price * selectedCount}\n🏠 Address: ${address}\n📞 Contact: ${contact}`;
             
             const whatsappLink = `https://wa.me/${shopOwnerNumber}?text=${encodeURIComponent(whatsappMessage)}`;
 
-            // Open WhatsApp with the pre-filled message
             window.open(whatsappLink, '_blank');
 
-            // Show confirmation on website
+            // Show confirmation
             itemDetails.classList.add('hidden');
             orderConfirmation.classList.remove('hidden');
             orderConfirmation.innerHTML = `<p>✅ Thank you for your order! It will be delivered soon.</p>`;
@@ -157,6 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
             orderConfirmation.style.justifyContent = 'center';
             orderConfirmation.style.alignItems = 'center';
             orderConfirmation.style.height = '100vh';
-        }
-    });
+        });
+    }
 });
